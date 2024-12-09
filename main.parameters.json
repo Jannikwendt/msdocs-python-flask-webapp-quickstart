@@ -4,7 +4,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
       "location": {
-        "value": "eastus"
+        "value": "westeurope"
       },
       "acrName": {
         "value": "myacrname"
