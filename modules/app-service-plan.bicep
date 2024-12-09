@@ -1,5 +1,3 @@
-// app-service-plan.bicep
-
 param name string
 param location string = resourceGroup().location
 param sku object

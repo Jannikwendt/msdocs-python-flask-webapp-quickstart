@@ -35,7 +35,7 @@ module webApp './modules/web-app.bicep' = {
     name: webAppName
     location: location
     kind: 'app'
-    serverFarmResourceId: appServicePlan.outputs.planId
+    serverfarmsResourceId: appServicePlan.outputs.planId
     siteConfig: {
       linuxFxVersion: 'DOCKER|${acr.outputs.loginServer}/${containerRegistryImageName}:${containerRegistryImageVersion}'
       appCommandLine: ''
