@@ -2,19 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Flask App (Docker)",
+            "name": "Python Debugger: Remote Attach",
             "type": "debugpy",
-            "request": "launch",
-            "module": "flask",
-            "env": {
-                "FLASK_APP": "app.py",
-                "FLASK_ENV": "development"
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
             },
-            "args": ["run", "--host=0.0.0.0"],
-            "dockerOptions": {
-                "containerName": "flask-webapp",
-                "image": "flask-webapp"
-            }
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
+            ]
         }
     ]
 }
