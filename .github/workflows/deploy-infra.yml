@@ -23,6 +23,6 @@ jobs:
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: 'aguadamillas_students_1'
+        resourceGroupName: 'BCSAI2024-DEVOPS-STUDENTS-A-DEV'
         template: ./main.bicep
         parameters: ./main.parameters.json
