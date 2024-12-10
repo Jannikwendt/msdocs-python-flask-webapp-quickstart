@@ -7,7 +7,7 @@ param serverfarmsResourceId string
 param siteConfig object
 param appSettingsKeyValuePairs object
 
-resource webApp 'Microsoft.Web/site@2022-09-01' = {
+resource webApp 'Microsoft.Web/sites@2021-02-01' = {
   name: name
   location : location
   kind: kind
@@ -17,10 +17,8 @@ resource webApp 'Microsoft.Web/site@2022-09-01' = {
   }
 }
 
-resource WebAppSettings 'Microsoft.Web/config@2022-09-01' = {
-  dependsOn: [
-    webApp
-  ]
-  name : 'appsettings'
+resource WebAppSettings 'Microsoft.Web/sites/config@2021-02-01' = {
+  parent: webApp
+  name: 'appsettings'
   properties : appSettingsKeyValuePairs
 }
