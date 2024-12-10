@@ -4,6 +4,7 @@ param appServicePlanName string
 param webAppName string
 param containerRegistryImageName string
 param containerRegistryImageVersion string
+param JanniksKeyVault string  // Added parameter for Key Vault name
 
 module acr './modules/acr.bicep' = {
   name: 'acrDeploy'
@@ -43,8 +44,9 @@ module webApp './modules/web-app.bicep' = {
     appSettingsKeyValuePairs: {
       WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
       DOCKER_REGISTRY_SERVER_URL: 'https://${acr.outputs.loginServer}'
-      DOCKER_REGISTRY_SERVER_USERNAME: acr.outputs.adminUsername
-      DOCKER_REGISTRY_SERVER_PASSWORD: acr.outputs.adminPassword
+      DOCKER_REGISTRY_SERVER_USERNAME: '@Microsoft.KeyVault(SecretUri=https://${JanniksKeyVault}.vault.azure.net/secrets/acr-admin-username)'  // Updated with Key Vault reference
+      DOCKER_REGISTRY_SERVER_PASSWORD: '@Microsoft.KeyVault(SecretUri=https://${JanniksKeyVault}.vault.azure.net/secrets/acr-admin-password)'  // Updated with Key Vault reference
     }
   }
 }
+
