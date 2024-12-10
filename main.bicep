@@ -35,7 +35,7 @@ resource acrUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVaultReference
   name: 'acr-admin-username'
   properties: {
-    value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2023-07-01').username
+    value: containerRegistry.listCredentials().username
   }
   dependsOn: [
     keyVault
@@ -47,7 +47,7 @@ resource acrPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVaultReference
   name: 'acr-admin-password'
   properties: {
-    value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2023-07-01').passwords[0].value
+    value: containerRegistry.listCredentials().passwords[0].value
   }
   dependsOn: [
     keyVault
