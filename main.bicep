@@ -4,7 +4,7 @@ param appServicePlanName string
 param webAppName string
 param containerRegistryImageName string
 param containerRegistryImageVersion string
-param JanniksKeyVault string  // Added parameter for Key Vault name
+param JanniksKeyVault string  // Added parameter for Key Vault
 
 module acr './modules/acr.bicep' = {
   name: 'acrDeploy'
