@@ -1,5 +1,3 @@
-
-
 param name string
 param location string = resourceGroup().location
 param kind string
