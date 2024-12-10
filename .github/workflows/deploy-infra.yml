@@ -61,7 +61,9 @@ jobs:
     - name: Create Web App
       if: ${{ steps.check_web_app.outputs.web_app_exists == 'false' }}
       run: |
-        az webapp create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.WEB_APP_NAME }} --plan ${{ env.APP_SERVICE_PLAN_NAME }} --deployment-container-image-name jannikacr.azurecr.io/myapp:latest
+        APP_SERVICE_PLAN_ID=$(az deployment group show -g ${{ env.RESOURCE_GROUP_NAME }} -n 'github-workflow-${{ github.run_number }}' --query 'properties.outputs.planId.value' -o tsv)
+
+        az webapp create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.WEB_APP_NAME }} --plan $APP_SERVICE_PLAN_ID --deployment-container-image-name jannikacr.azurecr.io/myapp:latest
     
     - name: Deploy Bicep
       uses: azure/arm-deploy@v1
