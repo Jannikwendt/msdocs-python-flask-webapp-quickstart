@@ -1,12 +1,12 @@
 param name string
 param location string = resourceGroup().location
 
-resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: name
   location: location
   properties: {
     enabledForDeployment: true
-    enableRbacAuthorization: true
+    enableRbacAuthorization: false 
     enableSoftDelete: false
     enabledForTemplateDeployment: true
     sku: {
@@ -16,24 +16,20 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     tenantId: subscription().tenantId
     accessPolicies: [
       {
+        objectId: '25d8d697-c4a2-479f-96e0-15593a830ae5'
         tenantId: subscription().tenantId
-        objectId: 'e68646c3-a102-4e66-90f6-8d1abec1555b'
         permissions: {
           secrets: [
-            'get'
-            'list'
-            'set'
-            'delete'
+            'all'
           ]
         }
       }
       {
+        objectId: 'e68646c3-a102-4e66-90f6-8d1abec1555b'
         tenantId: subscription().tenantId
-        objectId: '25d8d697-c4a2-479f-96e0-15593a830ae5'
         permissions: {
           secrets: [
-            'get'
-            'list'
+            'all'
           ]
         }
       }
