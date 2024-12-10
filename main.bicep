@@ -31,10 +31,11 @@ resource acrUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVaultReference
   name: 'acr-admin-username'
   properties: {
-    value: acr.outputs.adminUsername
+    value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2023-07-01').username
   }
   dependsOn: [
     keyVault
+    acr
   ]
 }
 
@@ -42,10 +43,11 @@ resource acrPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVaultReference
   name: 'acr-admin-password'
   properties: {
-    value: acr.outputs.adminPassword
+    value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2023-07-01').passwords[0].value
   }
   dependsOn: [
     keyVault
+    acr
   ]
 }
 
