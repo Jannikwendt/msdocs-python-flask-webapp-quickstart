@@ -38,3 +38,4 @@ jobs:
         resourceGroupName: 'BCSAI2024-DEVOPS-STUDENTS-A-DEV'
         template: ./main.bicep
         parameters: ./main.parameters.json
+        deploymentName: 'github-workflow-${{ github.run_number }}'
