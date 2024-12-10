@@ -9,10 +9,10 @@
           "value": "jannikacr"
       },
       "appServicePlanName": {
-          "value": "myappserviceplan"
+          "value": "jannik-asp"
       },
       "webAppName": {
-          "value": "mywebappJannik"
+          "value": "mywebappjannik"
       },
       "containerRegistryImageName": {
           "value": "myapp"

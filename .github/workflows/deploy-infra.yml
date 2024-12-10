@@ -10,6 +10,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      KEY_VAULT_NAME: jannik-kv-2024
+      KEY_VAULT_SECRET_NAME_ACR_USERNAME: acr-admin-username
+      KEY_VAULT_SECRET_NAME_ACR_PASSWORD: acr-admin-password
     
     steps:
     - uses: actions/checkout@v4
@@ -19,11 +23,18 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
+    - name: Get docker registry credentials from Azure Key Vault
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          echo "REGISTRY_USERNAME=$(az keyvault secret show --name ${{ env.KEY_VAULT_SECRET_NAME_ACR_USERNAME }} --vault-name ${{ env.KEY_VAULT_NAME }} --query value -o tsv)" >> $GITHUB_ENV
+          echo "REGISTRY_PASSWORD=$(az keyvault secret show --name ${{ env.KEY_VAULT_SECRET_NAME_ACR_PASSWORD }} --vault-name ${{ env.KEY_VAULT_NAME }} --query value -o tsv)" >> $GITHUB_ENV
+    
     - name: Deploy Bicep
       uses: azure/arm-deploy@v1
       with:
         scope: resourcegroup
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: 'BCSAI2024-DEVOPS-STUDENTS-A-DEV'
+        resourceGroupName: 'BCSAI2024-DEVOPS-RETAKERS-DEV'
         template: ./main.bicep
         parameters: ./main.parameters.json
