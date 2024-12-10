@@ -14,17 +14,30 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    accessPolicies: []
-  }
-}
-
-resource keyVaultSecretsRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, '25d8d697-c4a2-479f-96e0-15593a830ae5', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
-  scope: keyVault
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
-    principalId: '25d8d697-c4a2-479f-96e0-15593a830ae5'
-    principalType: 'ServicePrincipal'
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: 'e68646c3-a102-4e66-90f6-8d1abec1555b'
+        permissions: {
+          secrets: [
+            'get'
+            'list'
+            'set'
+            'delete'
+          ]
+        }
+      }
+      {
+        tenantId: subscription().tenantId
+        objectId: '25d8d697-c4a2-479f-96e0-15593a830ae5'
+        permissions: {
+          secrets: [
+            'get'
+            'list'
+          ]
+        }
+      }
+    ]
   }
 }
 
