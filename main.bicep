@@ -6,6 +6,10 @@ param containerRegistryImageName string
 param containerRegistryImageVersion string
 param keyVaultName string
 
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  name: acrName
+}
+
 module keyVault './modules/key-vault.bicep' = {
   name: 'keyVaultDeploy'
   params: {
@@ -87,5 +91,29 @@ module webApp './modules/web-app.bicep' = {
   dependsOn: [
     acrUsernameSecret
     acrPasswordSecret
+  ]
+}
+
+resource webAppIdentity 'Microsoft.Web/sites/config@2023-01-01' = {
+  name: '${webAppName}/web'
+  properties: {
+    managedServiceIdentityId: 1
+  }
+  dependsOn: [
+    webApp
+  ]
+}
+
+resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(containerRegistry.id, webAppName, 'AcrPull')
+  scope: containerRegistry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+    principalId: reference(resourceId('Microsoft.Web/sites', webAppName), '2023-01-01', 'full').identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+  dependsOn: [
+    webApp
+    webAppIdentity
   ]
 }
