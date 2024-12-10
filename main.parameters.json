@@ -20,8 +20,8 @@
       "containerRegistryImageVersion": {
           "value": "latest"
       },
-      "JanniksKeyVault": {
-          "value": "JanniksKeyVault"
+      "keyVaultName": {
+        "value": "jannik-key-vault"
       }
   }
 }
