@@ -14,6 +14,8 @@ jobs:
       KEY_VAULT_NAME: jannik-kv-2024
       KEY_VAULT_SECRET_NAME_ACR_USERNAME: acr-admin-username
       KEY_VAULT_SECRET_NAME_ACR_PASSWORD: acr-admin-password
+      RESOURCE_GROUP_NAME: BCSAI2024-DEVOPS-STUDENTS-A-DEV
+      WEB_APP_NAME: mywebappjannik
     
     steps:
     - uses: actions/checkout@v4
@@ -30,12 +32,43 @@ jobs:
           echo "REGISTRY_USERNAME=$(az keyvault secret show --name ${{ env.KEY_VAULT_SECRET_NAME_ACR_USERNAME }} --vault-name ${{ env.KEY_VAULT_NAME }} --query value -o tsv)" >> $GITHUB_ENV
           echo "REGISTRY_PASSWORD=$(az keyvault secret show --name ${{ env.KEY_VAULT_SECRET_NAME_ACR_PASSWORD }} --vault-name ${{ env.KEY_VAULT_NAME }} --query value -o tsv)" >> $GITHUB_ENV
     
+    - name: Check Resource Group Existence
+      id: check_resource_group
+      run: |
+        if az group exists --name ${{ env.RESOURCE_GROUP_NAME }}; then
+          echo "Resource group exists"
+          echo "::set-output name=resource_group_exists::true"
+        else
+          echo "Resource group does not exist"
+          echo "::set-output name=resource_group_exists::false"
+        fi
+    
+    - name: Create Resource Group
+      if: ${{ steps.check_resource_group.outputs.resource_group_exists == 'false' }}
+      run: az group create --name ${{ env.RESOURCE_GROUP_NAME }} --location westeurope
+    
+    - name: Check Web App Existence
+      id: check_web_app
+      run: |
+        if az webapp show --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.WEB_APP_NAME }} &> /dev/null; then
+          echo "Web app exists"
+          echo "::set-output name=web_app_exists::true"
+        else
+          echo "Web app does not exist"
+          echo "::set-output name=web_app_exists::false"
+        fi
+    
+    - name: Create Web App
+      if: ${{ steps.check_web_app.outputs.web_app_exists == 'false' }}
+      run: |
+        az webapp create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.WEB_APP_NAME }} --plan ${{ env.APP_SERVICE_PLAN_NAME }} --deployment-container-image-name jannikacr.azurecr.io/myapp:latest
+    
     - name: Deploy Bicep
       uses: azure/arm-deploy@v1
       with:
         scope: resourcegroup
         subscriptionId: 'e0b9cada-61bc-4b5a-bd7a-52c606726b3b'
-        resourceGroupName: 'BCSAI2024-DEVOPS-STUDENTS-A-DEV'
+        resourceGroupName: ${{ env.RESOURCE_GROUP_NAME }}
         template: ./main.bicep
         parameters: ./main.parameters.json
         deploymentName: 'github-workflow-${{ github.run_number }}'
