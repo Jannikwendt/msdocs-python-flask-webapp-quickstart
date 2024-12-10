@@ -5,20 +5,12 @@ param webAppName string
 param containerRegistryImageName string
 param containerRegistryImageVersion string
 param keyVaultName string
-param objectId string = 'e68646c3-a102-4e66-90f6-8d1abec1555b'
 
 module keyVault './modules/key-vault.bicep' = {
   name: 'keyVaultDeploy'
   params: {
     name: keyVaultName
     location: location
-    roleAssignments: [
-      {
-        roleDefinitionId: 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
-        principalId: objectId
-        principalType: 'User'
-      }
-    ]
   }
 }
 

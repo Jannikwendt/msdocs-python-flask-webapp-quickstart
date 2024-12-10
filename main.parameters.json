@@ -21,7 +21,7 @@
           "value": "latest"
       },
       "keyVaultName": {
-        "value": "jannik-key-vault"
+        "value": "jannik-kv-2024"
       }
   }
 }
