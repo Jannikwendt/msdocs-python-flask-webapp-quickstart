@@ -35,6 +35,6 @@ jobs:
       with:
         scope: resourcegroup
         subscriptionId: 'e0b9cada-61bc-4b5a-bd7a-52c606726b3b'
-        resourceGroupName: 'BCSAI2024-DEVOPS-RETAKERS-DEV'
+        resourceGroupName: 'BCSAI2024-DEVOPS-STUDENTS-A-DEV'
         template: ./main.bicep
         parameters: ./main.parameters.json
