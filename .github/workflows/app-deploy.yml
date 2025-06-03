@@ -23,20 +23,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ───────────── CHECK OUT CODE ─────────────
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      # ───────────── AZURE LOGIN ────────────────
       - name: Azure login (service-principal)
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # ---------- BUILD & PUSH ----------
+      # ───────────── DOCKER LOGIN (AAD TOKEN) ───
       - name: Docker login to ACR (AAD token)
         uses: azure/docker-login@v1
         with:
           login-server: ${{ env.REGISTRY_LOGIN }}
 
+      # ───────────── BUILD & PUSH IMAGE ─────────
       - name: Generate image tag
         id: tag
         run: echo "VER=${{ github.ref_name }}-$(date +'%Y.%m.%d.%H%M')" >> $GITHUB_ENV
@@ -49,9 +52,24 @@ jobs:
           docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:$VER
           docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
 
-      # ---------- DEPLOY ----------
+      # ───────────── FETCH ACR ADMIN CREDS ──────
+      - name: Fetch ACR admin creds
+        id: acrcreds
+        run: |
+          CREDS=$(az acr credential show \
+                    --name $REGISTRY_NAME \
+                    --resource-group $RESOURCE_GROUP \
+                    --query "{u:username,p:passwords[0].value}" \
+                    --output tsv)
+          echo "ACR_USER=$(echo $CREDS | awk '{print $1}')" >> $GITHUB_ENV
+          echo "ACR_PASS=$(echo $CREDS | awk '{print $2}')" >> $GITHUB_ENV
+
+      # ───────────── DEPLOY TO WEB APP ──────────
       - name: Deploy container to Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name:     ${{ env.WEBAPP_NAME }}
+          registry-url: ${{ env.REGISTRY_LOGIN }}
+          username:     ${{ env.ACR_USER }}
+          password:     ${{ env.ACR_PASS }}
           images:       ${{ env.REGISTRY_LOGIN }}/${{ env.IMAGE_BASE_NAME }}:${{ env.VER }}
