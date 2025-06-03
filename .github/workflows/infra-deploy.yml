@@ -22,4 +22,4 @@ jobs:
           az deployment group create \
             --resource-group BCSAI2024-DEVOPS-RETAKERS-DEV \
             --template-file infra/main.bicep \
-            --parameters @infra/jwendt.bicepparam
+            
