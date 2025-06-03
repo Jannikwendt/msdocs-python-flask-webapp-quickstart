@@ -1,0 +1,58 @@
+name: Build & deploy app
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "Dockerfile"
+      - "app.py"
+      - "static/**"
+      - "templates/**"
+      - ".github/workflows/deploy-app.yml"
+
+
+env:
+  REGISTRY_LOGIN:  jwendtacr.azurecr.io        # <— your ACR login server
+  IMAGE_BASE_NAME: flaskweb                    # one word, no “/”
+  WEBAPP_NAME:     jwendt-web                  # must match the Web App in Bicep
+  RESOURCE_GROUP:  BCSAI2024-DEVOPS-STUDENTS-A-UAT
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # ── checkout ──────────────────────────────────────────────
+    -  uses: actions/checkout@v4
+
+    # ── Azure login (SP secret from repo secret AZURE_CREDENTIALS) ──
+    -  uses: azure/login@v1
+       with:
+         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # ── log in to ACR **with the Azure-CLI token** ⇢ no username needed ──
+    -  name: Docker login to ACR
+       uses: azure/docker-login@v1
+       with:
+         login-server: ${{ env.REGISTRY_LOGIN }}
+         login-with-azure-cli: true           # ← fixes the “username” error
+
+    # ── build & push ──────────────────────────────────────────
+    -  name: Generate image tag
+       id: tag
+       run: echo "VER=${GITHUB_SHA::7}-$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
+
+    -  name: Build & push image
+       run: |
+         docker build . \
+           -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:${{ env.VER }} \
+           -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
+         docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:${{ env.VER }}
+         docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
+
+    # ── deploy container to Web App ───────────────────────────
+    -  name: Deploy to App Service
+       uses: azure/webapps-deploy@v3
+       with:
+         app-name:  ${{ env.WEBAPP_NAME }}
+         images:    ${{ env.REGISTRY_LOGIN }}/${{ env.IMAGE_BASE_NAME }}:latest
