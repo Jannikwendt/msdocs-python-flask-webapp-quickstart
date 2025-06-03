@@ -1,1 +1,54 @@
-<PASTE-THE-YAML-ABOVE>
+# .github/workflows/app-deploy.yml
+name: Build & deploy app
+
+on:
+  push:
+    branches: [ main ]
+    paths:    [ "static/**", "templates/**", "app.py", "Dockerfile", ".github/workflows/app-deploy.yml" ]
+
+env:
+  # must match the names you used in Bicep
+  REGISTRY_NAME:       jwendtacr
+  REGISTRY_LOGIN:      jwendtacr.azurecr.io
+  IMAGE_BASE_NAME:     flaskweb           # choose anything, no slash
+  WEBAPP_NAME:         jwendt-web
+  RESOURCE_GROUP:      BCSAI2024-DEVOPS-STUDENTS-A-UAT
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ---------- BUILD  &  PUSH ----------
+      - name: Docker login to ACR (token from az login)
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY_LOGIN }}
+
+      - name: Set image version label
+        id: image-version
+        run: echo "VER=${{ github.ref_name }}-$(date +'%Y.%m.%d.%H%M')" >> $GITHUB_ENV
+
+      - name: Build & push image
+        run: |
+          docker build . \
+            -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:$VER \
+            -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
+          docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:$VER
+          docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
+
+      # ---------- DEPLOY ----------
+      - name: Deploy to App Service (linux container)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name:   ${{ env.WEBAPP_NAME }}
+          slot-name:  production
+          images:     ${{ env.REGISTRY_LOGIN }}/${{ env.IMAGE_BASE_NAME }}:latest
