@@ -1,4 +1,4 @@
-﻿using BicepParamsFormat 0.5
+﻿using 'main.bicep'        # <- correct relative path
 
 param location  = 'westeurope'
 param acrName   = 'jwendtacr'
