@@ -17,8 +17,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install latest Bicep CLI (for build-params)
-        run: az bicep install --upgrade
+      - name: Install or update Bicep CLI
+        run: |
+          az bicep install          # installs if missing
+          az bicep upgrade
+
 
       - name: Build Bicep template & params to JSON
         run: |
