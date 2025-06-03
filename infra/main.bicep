@@ -1,4 +1,6 @@
-﻿param location string  = 'westeurope'
+﻿// infra/main.bicep
+// ────────────────────────────────────────────────
+param location string  = 'westeurope'
 param acrName  string  = 'jwendtacr'
 param planName string  = 'jwendt-asp'
 param webName  string  = 'jwendt-web'
@@ -11,6 +13,9 @@ var linuxSku = {
   capacity: 1
 }
 
+//
+// Azure Container Registry
+//
 resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01' = {
   name: acrName
   location: location
@@ -22,16 +27,22 @@ resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01' = {
   }
 }
 
+//
+// Linux App Service plan
+//
 resource plan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: planName
   location: location
   kind: 'linux'
   sku: linuxSku
   properties: {
-    reserved: true   // Linux plan
+    reserved: true  // Linux plan
   }
 }
 
+//
+// Web App for Containers
+//
 resource web 'Microsoft.Web/sites@2022-09-01' = {
   name: webName
   location: location
@@ -60,7 +71,4 @@ resource web 'Microsoft.Web/sites@2022-09-01' = {
       ]
     }
   }
-  dependsOn: [
-    acr
-  ]
 }
