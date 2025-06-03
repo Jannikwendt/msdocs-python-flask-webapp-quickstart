@@ -11,41 +11,56 @@ var linuxSku = {
   capacity: 1
 }
 
-module acr './modules/container-registry/registry/main.bicep' = {
-  name:  'acr'
-  params: {
-    name:             acrName
-    location:         location
+resource acr 'Microsoft.ContainerRegistry/registries@2023-05-01' = {
+  name: acrName
+  location: location
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
     adminUserEnabled: true
   }
 }
 
 resource plan 'Microsoft.Web/serverfarms@2022-09-01' = {
-  name:     planName
+  name: planName
   location: location
-  kind:     'linux'
-  sku:      linuxSku
+  kind: 'linux'
+  sku: linuxSku
   properties: {
     reserved: true   // Linux plan
   }
 }
 
-module web './modules/web/site/main.bicep' = {
-  name:  'web'
-  params: {
-    name:                 webName
-    location:             location
-    kind:                 'app'
-    serverFarmResourceId: plan.id
+resource web 'Microsoft.Web/sites@2022-09-01' = {
+  name: webName
+  location: location
+  kind: 'app'
+  properties: {
+    serverFarmId: plan.id
     siteConfig: {
       linuxFxVersion: 'DOCKER|${acrName}.azurecr.io/placeholder:latest'
-    }
-    appSettingsKeyValuePairs: {
-      WEBSITES_ENABLE_APP_SERVICE_STORAGE:      false
-      DOCKER_REGISTRY_SERVER_URL:              'https://${acrName}.azurecr.io'
-      DOCKER_REGISTRY_SERVER_USERNAME:         acr.outputs.adminUsername
-      DOCKER_REGISTRY_SERVER_PASSWORD:         acr.outputs.adminPassword
+      appSettings: [
+        {
+          name:  'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'false'
+        }
+        {
+          name:  'DOCKER_REGISTRY_SERVER_URL'
+          value: 'https://${acrName}.azurecr.io'
+        }
+        {
+          name:  'DOCKER_REGISTRY_SERVER_USERNAME'
+          value: acr.listCredentials().username
+        }
+        {
+          name:  'DOCKER_REGISTRY_SERVER_PASSWORD'
+          value: acr.listCredentials().passwords[0].value
+        }
+      ]
     }
   }
-  dependsOn: [acr]
+  dependsOn: [
+    acr
+  ]
 }
