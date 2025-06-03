@@ -11,7 +11,7 @@ var linuxSku = {
   capacity: 1
 }
 
-resource acr 'Microsoft.ContainerRegistry/registries@2023-05-01' = {
+resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01' = {
   name: acrName
   location: location
   sku: {
