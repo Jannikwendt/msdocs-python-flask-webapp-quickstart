@@ -1,4 +1,4 @@
-﻿using 'main.bicep'        # <- correct relative path
+﻿using 'main.bicep'
 
 param location  = 'westeurope'
 param acrName   = 'jwendtacr'
