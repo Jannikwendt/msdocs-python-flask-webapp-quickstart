@@ -12,7 +12,6 @@ on:
       - ".github/workflows/app-deploy.yml"
 
 env:
-  # ── values used everywhere ─────────────────────────────────────────
   REGISTRY_NAME:   jwendtacr
   REGISTRY_LOGIN:  jwendtacr.azurecr.io
   IMAGE_BASE_NAME: flaskweb
@@ -24,51 +23,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ── checkout source code ───────────────────────────────────────
-      - name: Checkout sources
-        uses: actions/checkout@v4
+    # ─────────────  CHECKOUT & LOGIN  ───────────────────────────
+    - name: Checkout sources
+      uses: actions/checkout@v4
 
-      # ── log in to Azure with service-principal JSON secret ─────────
-      - name: Azure login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Azure login (service-principal)
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # ── docker login to ACR using the AAD token we just got ────────
-      - name: Docker login to ACR
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ env.REGISTRY_LOGIN }}
+    # ─────────────  DOCKER BUILD / PUSH  ────────────────────────
+    - name: Docker login to ACR (AAD token)
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.REGISTRY_LOGIN }}
 
-      # ── build & push image to ACR ──────────────────────────────────
-      - name: Generate image tag
-        id: tag
-        run: echo "VER=${{ github.ref_name }}-$(date +'%Y.%m.%d.%H%M')" >> $GITHUB_ENV
+    - name: Generate image tag
+      id: tag
+      run: echo "VER=${{ github.ref_name }}-$(date +'%Y.%m.%d.%H%M')" >> $GITHUB_ENV
 
-      - name: Build and push image
-        run: |
-          docker build . \
-            -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:$VER \
-            -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
-          docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:$VER
-          docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
+    - name: Build & push image
+      run: |
+        docker build . \
+          -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:$VER \
+          -t $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
+        docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:$VER
+        docker push $REGISTRY_LOGIN/$IMAGE_BASE_NAME:latest
 
-      # ── fetch ACR admin creds dynamically (no GitHub secrets) ──────
-      - name: Fetch ACR admin credentials
-        run: |
-          CREDS=$(az acr credential show \
-            --name $REGISTRY_NAME \
-            --resource-group $RESOURCE_GROUP \
-            --query "{u:username,p:passwords[0].value}" -o tsv)
-          echo "ACR_USER=$(echo $CREDS | awk '{print $1}')" >> $GITHUB_ENV
-          echo "ACR_PASS=$(echo $CREDS | awk '{print $2}')" >> $GITHUB_ENV
+    # ─────────────  FETCH ACR CREDENTIALS  ──────────────────────
+    - name: Fetch ACR admin credentials
+      run: |
+        CREDS=$(az acr credential show \
+          --name $REGISTRY_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --query "{u:username,p:passwords[0].value}" -o tsv) || exit 1
+        echo "ACR_USER=$(echo $CREDS | awk '{print \$1}')" >> $GITHUB_ENV
+        echo "ACR_PASS=$(echo $CREDS | awk '{print \$2}')" >> $GITHUB_ENV
 
-      # ── deploy the container to the Web App ────────────────────────
-      - name: Deploy to App Service (linux container)
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name:     ${{ env.WEBAPP_NAME }}
-          registry-url: ${{ env.REGISTRY_LOGIN }}
-          username:     ${{ env.ACR_USER }}
-          password:     ${{ env.ACR_PASS }}
-          images:       ${{ env.REGISTRY_LOGIN }}/${{ env.IMAGE_BASE_NAME }}:${{ env.VER }}
+    # ## OPTIONAL DEBUG – uncomment if you ever need to print the values
+    # - name: Debug ACR_USER / ACR_PASS
+    #   run: |
+    #     echo "ACR_USER=$ACR_USER"
+    #     echo "ACR_PASS is $( [ -z \"$ACR_PASS\" ] && echo 'EMPTY' || echo 'SET (hidden)' )"
+
+    # ─────────────  DEPLOY TO WEB APP  ──────────────────────────
+    - name: Deploy container to Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name:     ${{ env.WEBAPP_NAME }}
+        images:       ${{ env.REGISTRY_LOGIN }}/${{ env.IMAGE_BASE_NAME }}:${{ env.VER }}
+        registry-url: ${{ env.REGISTRY_LOGIN }}
+        username:     ${{ env.ACR_USER }}
+        password:     ${{ env.ACR_PASS }}
