@@ -31,6 +31,6 @@ jobs:
       - name: Deploy ARM JSON
         run: |
           az deployment group create \
-            --resource-group BCSAI2024-DEVOPS-RETAKERS-DEV \
+            --resource-group BCSAI2024-DEVOPS-STUDENTS-A-UAT \
             --template-file infra/main.json \
             --parameters @infra/param.json
