@@ -1,0 +1,25 @@
+﻿name: Deploy infra
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ "infra/**" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Bicep to RG
+        run: |
+          az deployment group create \
+            --resource-group BCSAI2024-DEVOPS-RETAKERS-DEV \
+            --template-file infra/main.bicep \
+            --parameters @infra/jwendt.bicepparam
