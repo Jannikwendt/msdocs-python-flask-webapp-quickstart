@@ -3,7 +3,7 @@
 on:
   push:
     branches: [ main ]
-    paths: [ "infra/**" ]
+    paths:    [ "infra/**", ".github/workflows/infra-deploy.yml" ]
 
 jobs:
   deploy:
@@ -17,9 +17,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy Bicep to RG
+      - name: Install latest Bicep CLI (for build-params)
+        run: az bicep install --upgrade
+
+      - name: Build Bicep template & params to JSON
+        run: |
+          az bicep build --file infra/main.bicep --outfile infra/main.json
+          az bicep build-params --file infra/jwendt.bicepparam --outfile infra/param.json
+
+      - name: Deploy ARM JSON
         run: |
           az deployment group create \
             --resource-group BCSAI2024-DEVOPS-RETAKERS-DEV \
-            --template-file infra/main.bicep \
-            
+            --template-file infra/main.json \
+            --parameters @infra/param.json
